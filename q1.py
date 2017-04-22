@@ -44,3 +44,5 @@ for cs in genome_list:
 
 for c in sorted(cs_chunk, key=cs_chunk.get):
   print(c, cs_chunk[c], int_to_cs(c))
+
+print(cs_to_int('TTACCGTTAAGCTGA'))

@@ -152,8 +152,8 @@ print(len(first_degen))
 #     for s2 in seq:
 #         get_diff()
 
-# 826987577 17 ATTACCGTTAAGCT
-#  86724839 50 TTACCGTTAAGCTG
+# 826987577 17 ATTACCGTTAAGCTT
+#  86724839 50 TTACCGTTAAGCTGA
 
 
 # for c in sorted(cs_chunk, key=cs_chunk.get):
