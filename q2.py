@@ -75,6 +75,7 @@ def gen_degen(seq, ac):
 ac = all_combinations(1, 1)
 
 cs = []
+# print('a', get_diff(1017623764, 848998258))
 
 
 for c in control_sequence_list:
@@ -93,6 +94,8 @@ for i in cs:
         first_degen += gen_degen(k, ac)
 
 first_degen = list(set(first_degen))
+
+print('degen done')
 
 for d in first_degen:
     print(len(first_degen))
@@ -154,7 +157,6 @@ print(len(first_degen))
 
 # 826987577 17 ATTACCGTTAAGCTT
 #  86724839 50 TTACCGTTAAGCTGA
-
 
 # for c in sorted(cs_chunk, key=cs_chunk.get):
     # print(c, cs_chunk[c], int_to_cs(c))

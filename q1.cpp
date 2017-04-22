@@ -3,6 +3,7 @@
 #include <fstream>
 #include <vector>
 #include <unordered_map>
+#include <ctime>
 
 using namespace std;
 
@@ -42,6 +43,7 @@ string int_to_seq(int iseq) {
 }
 
 int main() {
+    const clock_t begin_time = clock();
     string line;
     ifstream file_q1("q1.data");
     ifstream file_genome("genome.data");
@@ -57,7 +59,6 @@ int main() {
     {
         genome[c++] = line;
     }
-
 
     unordered_map<int, int> m;
     unordered_map<int, int>::iterator it;
@@ -96,8 +97,6 @@ int main() {
     for (vit = vec.begin(); vit!=vec.end(); vit++){
         cout << vit->first << " " << vit->second << endl;
     }
-
-
-
+    cout << "time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
     return 0;
 }
