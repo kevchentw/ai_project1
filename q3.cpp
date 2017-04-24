@@ -110,44 +110,15 @@ unordered_set<int> gen_degen(int seq, vector<vector<int> > all_combinations){
     return v;
 }
 
-int estimate_function(int candidate, vector<vector<int> > all_cs) {
-    int estimate = 0;
-    int arr[6] = {};
-    int avg = 0;
-    int sum = 0;
-    int weighted_sum = 0;
-    int median = 0;
-    for(auto seq_list: all_cs){
-        int min = 16;
-        int diff;
-        for(auto seq: seq_list){
-            diff = get_diff(seq, candidate);
-            if(diff<min){
-                min = diff;
-            }
-        }
-        arr[min] += 1;
-    }
-    for(int i=1;i<=5;i++){
-        weighted_sum += i*arr[i];
-        sum += arr[i];
-        if(!median && sum >= 25){
-            median = i;
-        }
-    }
-    avg = weighted_sum/5;
-    cout << "avg: " << avg << " median: " << median << endl;
-    return estimate;
-}
-
 int main() {
     const clock_t begin_time = clock();
     string line;
-    ifstream file_q1("ex3_5_mutates.data");
+    ifstream file_q1("ex4_7_mutates.data");
     ifstream file_genome("genome.data");
     string data[50];
     string genome[1000];
-
+    // cout << get_diff(1017623764, 848998258) << endl;
+    // return 1;
     int c = 0;
     while (getline(file_q1, line))
     {
@@ -167,16 +138,12 @@ int main() {
         }
         all_cs.push_back(each_cs);
     }
-    // cout << "esti: " << estimate_function(207692985, all_cs) << endl;
-    // return 0;
-
 
     vector<vector<int> > c1= comb(15, 1);
 
     unordered_set<int> degen;
 
     int cnt = 1;
-    int ans;
 
     for(auto SEQ_LIST: all_cs){
         cout << "Gene: " << cnt++ << " Start" << endl;
@@ -190,10 +157,11 @@ int main() {
 
         for(auto seq_list: all_cs){
             unordered_set<int> copy_degen(degen_set);
+            // cout << "size: " << degen_set.size() << endl;
             for(auto d: degen_set){
                 int flag = 0;
                 for(auto seq: seq_list){
-                    if(get_diff(d, seq)<=5){
+                    if(get_diff(d, seq)<=7){
                         flag = 1;
                         break;
                     }
@@ -205,18 +173,14 @@ int main() {
             degen_set = copy_degen;
         }
         cout << "Left:" << degen_set.size() << endl;
-        if(degen_set.size()){
-            ans = *degen_set.begin();
-            for(auto d: degen_set){
-                cout << d << endl;
-                cout << int_to_seq(d) << endl;
-                estimate_function(d, all_cs);
-            }
-        }
+        // if(degen_set.size()){
+            // for(auto d: degen_set){
+                // cout << d << endl;
+                // cout << int_to_seq(d) << endl;
+            // }
+        // }
         cout << "time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
-        cout << "=========" << endl;
     }
-
 
     return 0;
 }
