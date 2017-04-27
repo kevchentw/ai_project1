@@ -7,7 +7,7 @@ soft, hard = resource.getrlimit(rsrc)
 resource.setrlimit(rsrc, (8000, hard))
 soft, hard = resource.getrlimit(rsrc)
 
-CS_FILE = 'q2.data'
+CS_FILE = 'ex3_5_mutates.data'
 GENOME_FILE = 'genome.data'
 
 control_sequence_list = []
@@ -71,41 +71,65 @@ def gen_degen(seq, ac):
     return degen_list
 
 
-
+# print(int_to_cs(286567747))
 ac = all_combinations(1, 1)
 
 cs = []
-# print('a', get_diff(1017623764, 848998258))
 
+mapp = {}
 
 for c in control_sequence_list:
     tmp = []
     for ptr in range(986):
-            tmp.append(cs_to_int(c[ptr:ptr+15]))
+            i = cs_to_int(c[ptr:ptr+15])
+            tmp.append(i)
+            try:
+                mapp[i]+=1
+                print(mapp[i])
+                print(c[ptr:ptr+15])
+            except Exception:
+                mapp[i] = 1
     cs.append(tmp)
 
-cs0 = list(set(cs[0]))
-print(len(cs0))
+print('done')
 
 first_degen = []
 
-for i in cs:
-    for k in i:
-        first_degen += gen_degen(k, ac)
+m = {}
+
+for cs_idx, i in enumerate(cs):
+    for i_idx, k in enumerate(i):
+        de = gen_degen(k, ac)
+        for d in de:
+            try:
+                m[d].add(d)
+            except Exception:
+                m[d] = set()
+                m[d].add(d)
+        first_degen += de
 
 first_degen = list(set(first_degen))
 
 print('degen done')
-
+print('map size', len(m))
 for d in first_degen:
     print(len(first_degen))
-
-    for i in cs:
+    skip_set = set()
+    for cs_idx, i in enumerate(cs):
+        if cs_idx in skip_set:
+            print('skip')
+            continue
         flag = False
         for k in i:
-            # print(d, k)
             if get_diff(d, k) <= 5:
+                try:
+                    for s in m[k]:
+                        # print('add set')
+                        skip_set.add(s)
+                except Exception:
+                    pass
                 flag = True
+                break
         if not flag:
             try:
                 first_degen.remove(d)

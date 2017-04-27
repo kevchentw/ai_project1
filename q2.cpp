@@ -46,23 +46,19 @@ string int_to_seq(int iseq) {
 
 int get_diff(int s1, int s2) {
     int x = s1 ^ s2;
-    int diff = 0;
-    while(x > 0){
-        if(x & 3){
-            diff++;
-        }
-        x = x >> 2;
-    }
-    return diff;
+    x = ((x & 0x55555555) | ((x >> 1) & 0x55555555));
+    x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
+    x = (x & 0x0f0f0f0f) + ((x >> 4) & 0x0f0f0f0f);
+    x = (x & 0x00ff00ff) + ((x >> 8) & 0x00ff00ff);
+    x = (x & 0x0000ffff) + ((x >> 16) & 0x0000ffff);
+    return x;
 }
 
 vector<vector<int> > comb(int N, int K)
 {
     std::string bitmask(K, 1); // K leading 1's
     bitmask.resize(N, 0); // N-K trailing 0's
-
     vector<vector<int> > all_combinations;
-
     do {
         vector<int> each_comb;
         for (int i = 0; i < N; ++i) // [0..N-1] integers
@@ -75,13 +71,13 @@ vector<vector<int> > comb(int N, int K)
     return all_combinations;
 }
 
-unordered_set<int> get_replaced_seq(int seq, int pos){
-    unordered_set<int> v;
+vector<int> get_replaced_seq(int seq, int pos){
+    vector<int> v;
     int pos_gen = seq & (3 << pos);
     for(int i=0; i<4; i++){
             int tmp = seq;
             if(pos_gen != i){
-                v.insert((seq &
+                v.push_back((seq &
                     (0b111111111111111111111111111111
                         ^ (1 << pos*2)
                         ^ (1 << (pos*2+1))))
@@ -92,20 +88,22 @@ unordered_set<int> get_replaced_seq(int seq, int pos){
     return v;
 }
 
-unordered_set<int> gen_degen(int seq, vector<vector<int> > all_combinations){
-    unordered_set<int> v;
+vector<int> gen_degen(int seq, vector<vector<int> > all_combinations){
+    vector<int> v;
     for (auto i : all_combinations){ // access by const reference
-        unordered_set<int> tmp1;
-        tmp1.insert(seq);
+        vector<int> tmp1;
+        tmp1.push_back(seq);
         for (auto pos : i){
-            unordered_set<int> tmp2;
+            vector<int> tmp2;
             for(auto j : tmp1){
-                unordered_set<int> replaced_seq = get_replaced_seq(j, pos);
-                tmp2.insert(replaced_seq.begin(), replaced_seq.end());
+                vector<int> replaced_seq = get_replaced_seq(j, pos);
+                tmp2.reserve(tmp2.size()+replaced_seq.size());
+                tmp2.insert(tmp2.end(), replaced_seq.begin(), replaced_seq.end());
             }
             tmp1 = tmp2;
         }
-        v.insert(tmp1.begin(), tmp1.end());
+        v.reserve(v.size()+tmp1.size());
+        v.insert(v.end(), tmp1.begin(), tmp1.end());
     }
     return v;
 }
@@ -128,22 +126,33 @@ int estimate_function(int candidate, vector<vector<int> > all_cs) {
         }
         arr[min] += 1;
     }
+    float l2_sum = 0;
+    float l2_avg = (float)(2*arr[1]+1*arr[2]+1*arr[3]+2*arr[4]+10*arr[5])/50;
     for(int i=1;i<=5;i++){
         weighted_sum += i*arr[i];
         sum += arr[i];
+        // l2_sum += (l2_avg-(float)i)*(l2_avg-(float)i);
         if(!median && sum >= 25){
             median = i;
         }
     }
+    l2_sum += arr[0]*((10-avg));
+    l2_sum += arr[1]*((2-avg));
+    l2_sum += arr[2]*((1-avg));
+    l2_sum += arr[3]*((1-avg));
+    l2_sum += arr[4]*((2-avg));
+    l2_sum += arr[5]*((10-avg));
+    cout << "l2: " << l2_sum << endl;
+
     avg = weighted_sum/5;
     cout << "avg: " << avg << " median: " << median << endl;
-    return estimate;
+    return l2_sum;
 }
 
 int main() {
     const clock_t begin_time = clock();
     string line;
-    ifstream file_q1("ex3_5_mutates.data");
+    ifstream file_q1("ex1_5_mutates.data");
     ifstream file_genome("genome.data");
     string data[50];
     string genome[1000];
@@ -163,46 +172,43 @@ int main() {
     for(int i=0; i<50; i++){
         vector<int> each_cs;
         for(int pos=0; pos<986; pos++){
-            each_cs.push_back(seq_to_int(data[i].substr(pos, pos+15)));
+            int sint = seq_to_int(data[i].substr(pos, pos+15));
+            each_cs.push_back(sint);
         }
         all_cs.push_back(each_cs);
     }
-    // cout << "esti: " << estimate_function(207692985, all_cs) << endl;
-    // return 0;
-
 
     vector<vector<int> > c1= comb(15, 1);
 
-    unordered_set<int> degen;
 
     int cnt = 1;
     int ans;
 
     for(auto SEQ_LIST: all_cs){
         cout << "Gene: " << cnt++ << " Start" << endl;
+        int total = 0;
         unordered_set<int> degen_set;
-
         for(auto SEQ: SEQ_LIST){
-            unordered_set<int> tmp = gen_degen(SEQ, c1);
+            vector<int> tmp = gen_degen(SEQ, c1);
             degen_set.insert(tmp.begin(), tmp.end());
         }
         cout << "Degen set size: " << degen_set.size() << endl;
-
-        for(auto seq_list: all_cs){
-            unordered_set<int> copy_degen(degen_set);
+        for(int i=0; i<50; i++){
+            unordered_set<int> next_degen;
             for(auto d: degen_set){
                 int flag = 0;
-                for(auto seq: seq_list){
+                for(auto seq: all_cs.at(i)){
                     if(get_diff(d, seq)<=5){
                         flag = 1;
                         break;
                     }
                 }
-                if(!flag){
-                    copy_degen.erase(d);
+                if(flag){
+                    next_degen.insert(d);
                 }
             }
-            degen_set = copy_degen;
+            degen_set = next_degen;
+            next_degen.clear();
         }
         cout << "Left:" << degen_set.size() << endl;
         if(degen_set.size()){
@@ -215,8 +221,8 @@ int main() {
         }
         cout << "time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
         cout << "=========" << endl;
-    }
 
+    }
 
     return 0;
 }
