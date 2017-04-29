@@ -154,8 +154,8 @@ int main() {
     srand (time(NULL));
     const clock_t begin_time = clock();
     string line;
-    ifstream file_q1("./dataset/q3.data");
-    ifstream file_genome("./dataset/genome.data");
+    ifstream file_q1("q3.data");
+    ifstream file_genome("genome.data");
     string data[50];
     string genome[1000];
 

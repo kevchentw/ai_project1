@@ -6,14 +6,9 @@
 #include <unordered_set>
 #include <algorithm>
 #include <ctime>
+#include <cmath>
 
 using namespace std;
-
-typedef pair<int, int> PAIR;
-int cmp(const PAIR& x, const PAIR& y)
-{
-    return x.second < y.second;
-}
 
 int seq_to_int(string seq) {
     int iseq = 0;
@@ -110,7 +105,7 @@ vector<int> gen_degen(int seq, vector<vector<int> > all_combinations){
 
 int estimate_function(int candidate, vector<vector<int> > all_cs) {
     int estimate = 0;
-    int arr[6] = {};
+    int arr[6] = {0};
     int avg = 0;
     int sum = 0;
     int weighted_sum = 0;
@@ -127,33 +122,22 @@ int estimate_function(int candidate, vector<vector<int> > all_cs) {
         arr[min] += 1;
     }
     float l2_sum = 0;
-    float l2_avg = (float)(2*arr[1]+1*arr[2]+1*arr[3]+2*arr[4]+10*arr[5])/50;
-    for(int i=1;i<=5;i++){
-        weighted_sum += i*arr[i];
-        sum += arr[i];
-        // l2_sum += (l2_avg-(float)i)*(l2_avg-(float)i);
-        if(!median && sum >= 25){
-            median = i;
-        }
-    }
-    l2_sum += arr[0]*((10-avg));
-    l2_sum += arr[1]*((2-avg));
-    l2_sum += arr[2]*((1-avg));
-    l2_sum += arr[3]*((1-avg));
-    l2_sum += arr[4]*((2-avg));
-    l2_sum += arr[5]*((10-avg));
-    cout << "l2: " << l2_sum << endl;
+    float l2_avg = (float)(10*arr[0]+2*arr[1]+1*arr[2]+1*arr[3]+2*arr[4]+10*arr[5])/6;
 
-    avg = weighted_sum/5;
-    cout << "avg: " << avg << " median: " << median << endl;
+    l2_sum += abs(10*arr[0]-l2_avg);
+    l2_sum += abs(2*arr[1]-l2_avg);
+    l2_sum += abs(1*arr[2]-l2_avg);
+    l2_sum += abs(1*arr[3]-l2_avg);
+    l2_sum += abs(2*arr[4]-l2_avg);
+    l2_sum += abs(10*arr[5]-l2_avg);
     return l2_sum;
 }
 
 int main() {
     const clock_t begin_time = clock();
     string line;
-    ifstream file_q1("ex1_5_mutates.data");
-    ifstream file_genome("genome.data");
+    ifstream file_q1("./dataset/q2.data");
+    ifstream file_genome("./dataset/genome.data");
     string data[50];
     string genome[1000];
 
@@ -184,18 +168,23 @@ int main() {
     int cnt = 1;
     int ans;
 
+    vector<pair<int, int> > candidate_v;
+
     for(auto SEQ_LIST: all_cs){
-        cout << "Gene: " << cnt++ << " Start" << endl;
+        // cout << "Gene: " << cnt++ << " Start" << endl;
         int total = 0;
         unordered_set<int> degen_set;
         for(auto SEQ: SEQ_LIST){
             vector<int> tmp = gen_degen(SEQ, c1);
             degen_set.insert(tmp.begin(), tmp.end());
         }
-        cout << "Degen set size: " << degen_set.size() << endl;
+        // cout << "Degen set size: " << degen_set.size() << endl;
+        vector<int> degen_v(degen_set.size());
+        copy(degen_set.begin(), degen_set.end(), degen_v.begin());
+
         for(int i=0; i<50; i++){
-            unordered_set<int> next_degen;
-            for(auto d: degen_set){
+            vector<int> next_degen;
+            for(auto d: degen_v){
                 int flag = 0;
                 for(auto seq: all_cs.at(i)){
                     if(get_diff(d, seq)<=5){
@@ -204,25 +193,71 @@ int main() {
                     }
                 }
                 if(flag){
-                    next_degen.insert(d);
+                    next_degen.push_back(d);
                 }
             }
-            degen_set = next_degen;
+            degen_v = next_degen;
             next_degen.clear();
         }
-        cout << "Left:" << degen_set.size() << endl;
-        if(degen_set.size()){
-            ans = *degen_set.begin();
-            for(auto d: degen_set){
-                cout << d << endl;
-                cout << int_to_seq(d) << endl;
-                estimate_function(d, all_cs);
+        if(degen_v.size()){
+            for(auto d: degen_v){
+                // cout << d << endl;
+                // cout << int_to_seq(d) << endl;
+                candidate_v.push_back(make_pair(estimate_function(d, all_cs), d));
             }
         }
-        cout << "time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
-        cout << "=========" << endl;
-
     }
+    sort(candidate_v.begin(), candidate_v.end());
+    // int world_appear[5] = {0};
+    // for(int i=0; i<1000; i++){
+    //     for(int pos=0; pos<986; pos++){
+    //         int iseq = seq_to_int(genome[i].substr(pos, pos+15));
+    //         for(int cnt_c=0; cnt_c<5 && cnt_c<candidate_v.size(); cnt_c++){
+    //             if(get_diff(candidate_v.at(cnt_c).second, iseq)<=5){
+    //                 world_appear[cnt_c] ++;
+    //             }
+    //         }
+    //     }
+    // }
+    //
+    // for(int cnt_c=0; cnt_c<5 && cnt_c<candidate_v.size(); cnt_c++){
+    //     cout << int_to_seq(candidate_v.at(cnt_c).second) << endl;
+    //     cout << "cost:" << candidate_v.at(cnt_c).first << endl;
+    //     cout << "world_appear:" << world_appear[cnt_c] << endl;
+    // }
 
+
+
+    for(int i=0; i<all_cs.size(); i++){
+        int min = 16;
+        vector<int> ans_seq;
+        vector<int> ans_diff;
+        vector<int> ans_pos;
+        for(int j=0; j<all_cs[i].size(); j++){
+            int diff = get_diff(all_cs[i][j], candidate_v.begin()->second);
+            if(diff<=5){
+                if(diff<min){
+                    min = diff;
+                }
+                ans_seq.push_back(all_cs[i][j]);
+                ans_diff.push_back(diff);
+                ans_pos.push_back(j+1);
+            }
+        }
+        int sig = 0;
+        cout << "S" << i+1 <<  ":" << endl;
+        for(int cnt_ans = 0; cnt_ans<ans_seq.size(); cnt_ans++){
+            if(!sig && ans_diff[cnt_ans]==min){
+                sig = 1;
+                cout << "   *{(" << int_to_seq(ans_seq[cnt_ans]) << "," << ans_pos[cnt_ans]<< ")}" << endl;
+            }
+            else{
+                cout << "    {(" << int_to_seq(ans_seq[cnt_ans]) << "," << ans_pos[cnt_ans]<< ")}" << endl;
+            }
+        }
+    }
+    cout << "best control sequences candidate:" << int_to_seq(candidate_v.begin()->second) << endl;
+    cout << "second best control sequences candidate:" << int_to_seq(next(candidate_v.begin())->second) << endl;
+    cout << "time: " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
     return 0;
 }
