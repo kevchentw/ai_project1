@@ -185,7 +185,7 @@ int main() {
             int sint = seq_to_int(data[i].substr(pos, pos+15));
             int cg_total = seq_cg_total(data[i].substr(pos, pos+15));
             // version 1
-            // cg_v[cg_total].push_back(sint);
+            cg_v[cg_total].push_back(sint);
             // version 2
             // if(cg_total>=7 && cg_total<=8){
             //     cg_v[rand() % (cg_total+9)].push_back(sint);
@@ -196,10 +196,10 @@ int main() {
             //     cg_v[rand() % (24-cg_total)].push_back(sint);
             //version 3
             // cout << 10*cg_total + (rand()%cg_total) << endl;
-            if(cg_total<=7)
-                cg_v[10*cg_total + (rand()%(cg_total+1))].push_back(sint);
-            else
-                cg_v[10*(15-cg_total) + (rand() % (16-cg_total))].push_back(sint);
+            // if(cg_total<=7)
+            //     cg_v[10*cg_total + (rand()%(cg_total+1))].push_back(sint);
+            // else
+            //     cg_v[10*(15-cg_total) + (rand() % (16-cg_total))].push_back(sint);
             each_cs.push_back(sint);
         }
         all_cs.push_back(each_cs);
@@ -218,6 +218,7 @@ int main() {
         for(auto seq:cg){
             estimate_v.push_back(make_pair(estimate_function(seq, all_cs), seq));
         }
+
         sort(estimate_v.begin(), estimate_v.end());
         if(estimate_v.size()){
             candidate_v.push_back(estimate_v.at(0).second);
